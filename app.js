@@ -15,6 +15,8 @@ const uploadPapersRoutes = require("./routes/uploadPapers");
 const showPapersRoutes = require("./routes/showPapers");
 const examinerRoutes = require("./routes/examiner"); // Import the route
 const createClassRoutes = require("./routes/createClass");
+const addStudRoutes = require("./routes/addStud");
+
 
 const app = express();
 const server = http.createServer(app);
@@ -62,6 +64,7 @@ app.use("/uploadPapers", uploadPapersRoutes);
 app.use("/showPapers", showPapersRoutes);
 app.use("/examiner", examinerRoutes); 
 app.use("/createClass", createClassRoutes);
+app.use("/addStud", addStudRoutes);
 
 app.get("/", (req, res) => {
     res.send("App Work..!");
