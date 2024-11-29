@@ -6,7 +6,7 @@ const Student = require("../models/Student"); // Import the Student model
 router.get("/submi", (req, res) => {
     res.send("okk");
 })
-// Handle the POST request to save student data
+// Handle the POST request to save student dat
 router.post("/submit", (req, res) => {
     console.log(req.body); // Log the received data
     const { rollNumber, roomId, image } = req.body;
