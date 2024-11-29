@@ -47,7 +47,7 @@ app.use((req, res, next) => {
 
 // MongoDB connection
 mongoose
-    .connect("mongodb://localhost:27017/college", {
+    .connect("mongodb+srv://Rahul:Rahul@mario.b6prz.mongodb.net/college", {
         useNewUrlParser: true,
         useUnifiedTopology: true,
     })
