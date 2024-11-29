@@ -16,7 +16,7 @@ const showPapersRoutes = require("./routes/showPapers");
 const examinerRoutes = require("./routes/examiner"); // Import the route
 const createClassRoutes = require("./routes/createClass");
 const addStudRoutes = require("./routes/addStud");
-
+const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
@@ -27,6 +27,7 @@ const PORT = 3000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+app.use(cors()); // Enable CORS
 
 // Setup express-session for flash messages
 app.use(
