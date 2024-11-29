@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 const Student = require("../models/Student"); // Import the Student model
 
+
+router.get("/submi", (req, res) => {
+    res.send("okk");
+})
 // Handle the POST request to save student data
 router.post("/submit", (req, res) => {
     console.log(req.body); // Log the received data
