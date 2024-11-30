@@ -3,7 +3,7 @@ const router = express.Router();
 const Student = require("../models/Student"); // Import the Student model
 
 
-router.get("/submi", (req, res) => {
+router.get("/submit", (req, res) => {
     res.send("okk");
 })
 // Handle the POST request to save student dat
