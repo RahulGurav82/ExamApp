@@ -22,20 +22,21 @@ module.exports = (io) => {
     router.post("/", async (req, res) => {
         const { roomName } = req.body;
         const roomId = generateRoomId();
-
+    
         try {
-            // Save room to the database
             const newRoom = new Room({
                 roomName,
                 roomId,
             });
+    
+            console.log("New Room Data:", newRoom); // Log room data before saving
             await newRoom.save();
-
+    
             io.emit("roomCreated", {
                 room: newRoom,
                 message: `New classroom "${roomName}" has been created`,
             });
-
+    
             req.flash("success", "Classroom created successfully!");
             res.redirect("/createClass/showRooms");
         } catch (error) {
@@ -44,6 +45,7 @@ module.exports = (io) => {
             res.redirect("/createClass");
         }
     });
+    
 
     // Show all created rooms
     router.get("/showRooms", async (req, res) => {
@@ -79,9 +81,11 @@ module.exports = (io) => {
     // Endpoint to validate room ID
     router.post("/validateRoom", async (req, res) => {
         const { roomId } = req.body;
-
+        console.log("Validating Room ID:", roomId);
+    
         try {
             const room = await Room.findOne({ roomId });
+            console.log("Room found:", room);
             if (room) {
                 return res.status(200).json({ success: true, message: "Room found." });
             }
@@ -91,6 +95,7 @@ module.exports = (io) => {
             res.status(500).json({ success: false, message: "Internal server error." });
         }
     });
+    
 
     // Endpoint to add a participant to a room
     router.post("/addParticipant", async (req, res) => {
