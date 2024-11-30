@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const Room = require("../models/Room"); // Import the Room model
 
 module.exports = (io) => {
-    const rooms = []; // Store rooms in memory
-    const userSubmissions = []; // Store user submissions
-
     // Function to generate a random 5-character alphanumeric string
     function generateRoomId() {
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -21,96 +19,104 @@ module.exports = (io) => {
     });
 
     // Handle room creation
-// ... existing code ...
-
-    // Handle room creation
-    router.post("/", (req, res) => {
+    router.post("/", async (req, res) => {
         const { roomName } = req.body;
         const roomId = generateRoomId();
-        
-        // Create room object with additional details
-        const room = {
-            roomName,
-            roomId,
-            createdAt: new Date(),
-            active: true,
-            participants: []
-        };
 
-        rooms.push(room);
-        console.log("Rooms after creation:", rooms); // Debug log
+        try {
+            // Save room to the database
+            const newRoom = new Room({
+                roomName,
+                roomId,
+            });
+            await newRoom.save();
 
+            io.emit("roomCreated", {
+                room: newRoom,
+                message: `New classroom "${roomName}" has been created`,
+            });
 
-        // Emit the new room to all connected clients
-        io.emit("roomCreated", {
-            room,
-            message: `New classroom "${roomName}" has been created`
-        });
-
-        req.flash("success", "Classroom created successfully!");
-        res.redirect("/createClass/showRooms");
+            req.flash("success", "Classroom created successfully!");
+            res.redirect("/createClass/showRooms");
+        } catch (error) {
+            console.error("Error creating room:", error);
+            req.flash("error", "Failed to create classroom.");
+            res.redirect("/createClass");
+        }
     });
 
-    // Show all created rooms and user submissions
-    router.get("/showRooms", (req, res) => {
-        // Sort rooms by creation date
-        const sortedRooms = rooms.sort((a, b) => b.createdAt - a.createdAt);
-        res.render("Examiner/showRooms", { 
-            rooms: sortedRooms, 
-            userSubmissions,
-            moment: require('moment') // For date formatting
-        });
+    // Show all created rooms
+    router.get("/showRooms", async (req, res) => {
+        try {
+            const rooms = await Room.find().sort({ createdAt: -1 }); // Fetch rooms from DB
+            res.render("Examiner/showRooms", {
+                rooms,
+                moment: require("moment"), // For date formatting
+            });
+        } catch (error) {
+            console.error("Error fetching rooms:", error);
+            req.flash("error", "Failed to fetch classrooms.");
+            res.redirect("/");
+        }
     });
 
     // Add a new route to join a specific room
-    router.get("/room/:roomId", (req, res) => {
-        const room = rooms.find(r => r.roomId === req.params.roomId);
-        if (!room) {
-            req.flash("error", "Classroom not found!");
-            return res.redirect("/createClass/showRooms");
+    router.get("/room/:roomId", async (req, res) => {
+        try {
+            const room = await Room.findOne({ roomId: req.params.roomId });
+            if (!room) {
+                req.flash("error", "Classroom not found!");
+                return res.redirect("/createClass/showRooms");
+            }
+            res.render("Examiner/room", { room });
+        } catch (error) {
+            console.error("Error finding room:", error);
+            req.flash("error", "Failed to fetch classroom details.");
+            res.redirect("/createClass/showRooms");
         }
-        res.render("Examiner/room", { room });
     });
 
     // Endpoint to validate room ID
-    router.post("/validateRoom", (req, res) => {
+    router.post("/validateRoom", async (req, res) => {
         const { roomId } = req.body;
-        console.log("POST /validateRoom called");
-        console.log("Body:", req.body);
-        console.log("Rooms:", rooms); // Log all rooms
-    
-        const room = rooms.find(r => r.roomId === roomId);
-        if (room) {
-            return res.status(200).json({ success: true, message: "Room found." });
+
+        try {
+            const room = await Room.findOne({ roomId });
+            if (room) {
+                return res.status(200).json({ success: true, message: "Room found." });
+            }
+            return res.status(404).json({ success: false, message: "Room not found." });
+        } catch (error) {
+            console.error("Error validating room:", error);
+            res.status(500).json({ success: false, message: "Internal server error." });
         }
-        return res.status(404).json({ success: false, message: "Room not found." });
     });
-    
-    
 
     // Endpoint to add a participant to a room
-    router.post("/addParticipant", (req, res) => {
+    router.post("/addParticipant", async (req, res) => {
         const { rollNumber, roomId } = req.body;
-        const room = rooms.find(r => r.roomId === roomId);
 
-        if (room) {
-            const participant = {
-                rollNo: rollNumber,
-                joinTime: new Date(),
-            };
-            room.participants.push(participant);
+        try {
+            const room = await Room.findOne({ roomId });
+            if (room) {
+                const participant = {
+                    rollNo: rollNumber,
+                    joinTime: new Date(),
+                };
+                room.participants.push(participant);
+                await room.save();
 
-            // Emit the new participant to all connected clients
-            io.emit("participantJoined", { roomId, participant });
+                io.emit("participantJoined", { roomId, participant });
 
-            return res.status(200).json({ success: true, message: "Participant added successfully." });
+                return res.status(200).json({ success: true, message: "Participant added successfully." });
+            }
+
+            return res.status(404).json({ success: false, message: "Room not found." });
+        } catch (error) {
+            console.error("Error adding participant:", error);
+            res.status(500).json({ success: false, message: "Internal server error." });
         }
-
-        return res.status(404).json({ success: false, message: "Room not found." });
     });
-
-
-
 
     return router;
 };
