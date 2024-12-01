@@ -78,6 +78,27 @@ module.exports = (io) => {
         }
     });
 
+    // Route to delete a room
+    router.post("/deleteRoom/:roomId", async (req, res) => {
+        const { roomId } = req.params;
+
+        try {
+            const deletedRoom = await Room.findOneAndDelete({ roomId });
+            if (deletedRoom) {
+                io.emit("roomDeleted", { roomId });
+                req.flash("success", `Room "${deletedRoom.roomName}" deleted successfully.`);
+            } else {
+                req.flash("error", "Room not found.");
+            }
+        } catch (error) {
+            console.error("Error deleting room:", error);
+            req.flash("error", "Failed to delete the room.");
+        }
+
+        res.redirect("/createClass/showRooms");
+    });
+
+
     // Endpoint to validate room ID
     router.post("/validateRoom", async (req, res) => {
         const { roomId } = req.body;

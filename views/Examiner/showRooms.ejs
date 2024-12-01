@@ -38,9 +38,13 @@
                                     <% }); %>
                                 </ul>
                                 <a href="/createClass/room/<%= room.roomId %>" class="btn btn-primary mt-3 w-100">Enter Room</a>
+                                <form action="/createClass/deleteRoom/<%= room.roomId %>" method="POST" class="mt-2">
+                                    <button type="submit" class="btn btn-danger w-100">Delete Room</button>
+                                </form>
                             </div>
                         </div>
                     </div>
+                    
                 <% }); %>
             </div>
         <% } %>
@@ -54,6 +58,11 @@
         socket.on("roomCreated", (data) => {
             window.location.reload();
         });
+
+        socket.on("roomDeleted", (data) => {
+            window.location.reload();
+        });
+
     </script>
 
     <!-- Bootstrap Bundle with Popper -->
