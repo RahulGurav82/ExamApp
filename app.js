@@ -8,28 +8,37 @@ const { Server } = require("socket.io");
 const http = require("http");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const MongoStore = require("connect-mongo");
+const winston = require("winston");
 
 const app = express();
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
 const server = http.createServer(app);
 const io = new Server(server);
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// Setup view engine
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
 // Middleware
-app.use(cors()); // Enable CORS
+app.use(cors({
+    origin: ["*"], // Update with your frontend URL
+    methods: ["GET", "POST"],
+    credentials: true,
+}));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
 
 // Session and Flash Messages
 app.use(session({
     secret: process.env.SESSION_SECRET || "defaultSecret",
     resave: false,
     saveUninitialized: true,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI,
+    }),
 }));
 app.use(flash());
 app.use((req, res, next) => {
@@ -41,16 +50,25 @@ app.use((req, res, next) => {
 // Static Files
 app.use(express.static(path.join(__dirname, "public")));
 
+// Logger
+const logger = winston.createLogger({
+    level: "info",
+    format: winston.format.json(),
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: "error.log", level: "error" }),
+    ],
+});
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
     .then(() => console.log("Connected to MongoDB"))
-    .catch((err) => console.error("Database connection error:", err));
+    .catch((err) => logger.error("Database connection error:", err));
 
 // Routes
-
 const addStudentsRoutes = require("./routes/addStudents");
 const viewStudentsRoutes = require("./routes/viewStudents");
 const addPapersRoutes = require("./routes/addPapers");
@@ -66,13 +84,10 @@ app.use("/viewStudents", viewStudentsRoutes);
 app.use("/addPapers", addPapersRoutes);
 app.use("/uploadPapers", uploadPapersRoutes);
 app.use("/showPapers", showPapersRoutes);
-app.use("/getPaper", showPapersRoutes);
-
+app.use("/getPaper", getPaperRouter); 
 app.use("/examiner", examinerRoutes);
 app.use("/addStud", addStudRoutes);
 app.use("/createClass", createClassRouter);
-app.use("/examiner", examinerRoutes);
-
 
 // Socket.IO
 io.on("connection", (socket) => {
@@ -98,11 +113,10 @@ app.get("/", (req, res) => {
     res.render("home");
 });
 
-
 // Error Handling
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send("Something went wrong!");
+    logger.error(err.stack);
+    res.status(500).json({ error: "Something went wrong!", details: err.message });
 });
 
 // Start Server
