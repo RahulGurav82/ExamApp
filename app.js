@@ -77,7 +77,7 @@ const showPapersRoutes = require("./routes/showPapers");
 const examinerRoutes = require("./routes/examiner");
 const addStudRoutes = require("./routes/addStud");
 const createClassRouter = require("./routes/createClass")(io);
-const getPaperRouter = require("./routes/getPaper")(io);
+const getPaperRouter = require("./routes/getPaper");
 
 app.use("/addStudents", addStudentsRoutes);
 app.use("/viewStudents", viewStudentsRoutes);
