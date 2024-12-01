@@ -92,8 +92,9 @@ io.on("connection", (socket) => {
 
 // Root Route
 app.get("/", (req, res) => {
-    res.send("App Work..!");
+    res.render("home");
 });
+
 
 // Error Handling
 app.use((err, req, res, next) => {
