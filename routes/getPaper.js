@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const Paper = require("../models/Papers"); // Replace with the correct model import
+const Paper = require("../models/Papers"); // Import your Paper model
 
 // Endpoint to fetch paper by QP code
 router.get("/", async (req, res) => {
     console.log("Received request to fetch paper.");
     console.log("Query Parameters:", req.query);
-    console.log("Request Body (if any):", req.body);
 
     const { qpCode } = req.query;
 
@@ -28,9 +27,10 @@ router.get("/", async (req, res) => {
         console.log(`Paper found for QP Code: ${qpCode}`);
         console.log("Paper Data:", paper);
 
+        // Return the Cloudinary URL stored in the fileUrl field
         res.json({
             success: true,
-            data: paper.image, // Assuming `image` contains the Base64 or URL of the image
+            data: paper.fileUrl, // Return the URL of the paper image from Cloudinary
         });
     } catch (error) {
         console.error("Error fetching paper:", error.message);
