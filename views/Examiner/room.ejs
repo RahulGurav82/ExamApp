@@ -47,12 +47,15 @@
     <!-- Socket.IO Script -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
+
         const socket = io();
         
         // Listen for new participants
         socket.on("participantJoined", (data) => {
+            console.log("Participant joined:", data);
         if (data.roomId === "<%= room.roomId %>") {
         const tableBody = document.querySelector("tbody");
+        console.log("Table body found:", tableBody);
         const newRow = document.createElement("tr");
 
         newRow.innerHTML = `

@@ -3,6 +3,8 @@ const router = express.Router();
 const Room = require("../models/Room"); // Import the Room model
 
 module.exports = (io) => {
+
+
     // Function to generate a random 5-character alphanumeric string
     function generateRoomId() {
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -70,7 +72,7 @@ module.exports = (io) => {
                 req.flash("error", "Classroom not found!");
                 return res.redirect("/createClass/showRooms");
             }
-            res.render("Examiner/room", { room });
+            res.render("Examiner/room", { room, moment: require("moment") });
         } catch (error) {
             console.error("Error finding room:", error);
             req.flash("error", "Failed to fetch classroom details.");
@@ -131,9 +133,10 @@ module.exports = (io) => {
                 };
                 room.participants.push(participant);
                 await room.save();
+                console.log("Updated Room Data:", room);
 
                 io.emit("participantJoined", { roomId, participant });
-
+                console.log("Emitted participantJoined:", { roomId, participant });
                 return res.status(200).json({ success: true, message: "Participant added successfully." });
             }
 
