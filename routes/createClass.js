@@ -3,8 +3,6 @@ const router = express.Router();
 const Room = require("../models/Room"); // Import the Room model
 
 module.exports = (io) => {
-
-
     // Function to generate a random 5-character alphanumeric string
     function generateRoomId() {
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -24,21 +22,21 @@ module.exports = (io) => {
     router.post("/", async (req, res) => {
         const { roomName } = req.body;
         const roomId = generateRoomId();
-    
+
         try {
             const newRoom = new Room({
                 roomName,
                 roomId,
             });
-    
+
             console.log("New Room Data:", newRoom); // Log room data before saving
             await newRoom.save();
-    
+
             io.emit("roomCreated", {
                 room: newRoom,
                 message: `New classroom "${roomName}" has been created`,
             });
-    
+
             req.flash("success", "Classroom created successfully!");
             res.redirect("/createClass/showRooms");
         } catch (error) {
@@ -47,7 +45,6 @@ module.exports = (io) => {
             res.redirect("/createClass");
         }
     });
-    
 
     // Show all created rooms
     router.get("/showRooms", async (req, res) => {
@@ -100,12 +97,11 @@ module.exports = (io) => {
         res.redirect("/createClass/showRooms");
     });
 
-
     // Endpoint to validate room ID
     router.post("/validateRoom", async (req, res) => {
         const { roomId } = req.body;
         console.log("Validating Room ID:", roomId);
-    
+
         try {
             const room = await Room.findOne({ roomId });
             console.log("Room found:", room);
@@ -118,34 +114,65 @@ module.exports = (io) => {
             res.status(500).json({ success: false, message: "Internal server error." });
         }
     });
-    
 
-    // Endpoint to add a participant to a room
+    // Endpoint to add a participant to a room after validation
     router.post("/addParticipant", async (req, res) => {
         const { rollNumber, roomId } = req.body;
+        console.log("Adding participant:", { rollNumber, roomId });
 
         try {
-            const room = await Room.findOne({ roomId });
-            if (room) {
-                const participant = {
-                    rollNo: rollNumber,
-                    joinTime: new Date(),
-                };
-                room.participants.push(participant);
-                await room.save();
-                console.log("Updated Room Data:", room);
-
-                io.emit("participantJoined", { roomId, participant });
-                console.log("Emitted participantJoined:", { roomId, participant });
-                return res.status(200).json({ success: true, message: "Participant added successfully." });
+            // Step 1: Validate the student
+            const isValidStudent = await validateStudent(rollNumber);
+            if (!isValidStudent) {
+                console.error(`Validation failed for student roll number: ${rollNumber}`);
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Invalid roll number. Student validation failed." 
+                });
             }
 
-            return res.status(404).json({ success: false, message: "Room not found." });
+            // Step 2: Find the room
+            const room = await Room.findOne({ roomId });
+            if (!room) {
+                console.error(`Room not found: ${roomId}`);
+                return res.status(404).json({ 
+                    success: false, 
+                    message: "Room not found." 
+                });
+            }
+
+            // Step 3: Add participant to the room
+            const participant = {
+                rollNo: rollNumber,
+                joinTime: new Date(),
+            };
+            room.participants.push(participant);
+            await room.save();
+
+            console.log("Updated Room Data After Adding Participant:", room);
+
+            // Emit event for real-time updates
+            io.emit("participantJoined", { roomId, participant });
+
+            return res.status(200).json({ 
+                success: true, 
+                message: "Participant added successfully." 
+            });
         } catch (error) {
             console.error("Error adding participant:", error);
-            res.status(500).json({ success: false, message: "Internal server error." });
+            return res.status(500).json({ 
+                success: false, 
+                message: "Internal server error." 
+            });
         }
     });
+
+    // Mock validation function
+    async function validateStudent(rollNumber) {
+        // Replace this logic with real validation (e.g., database query)
+        const validRollNumbers = ["247503", "247504", "247505"]; // Example roll numbers
+        return validRollNumbers.includes(rollNumber);
+    }
 
     return router;
 };
