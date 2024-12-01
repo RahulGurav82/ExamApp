@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Paper = require("../models/Paper"); // Replace with the correct model import
+const Paper = require("../models/Papers"); // Replace with the correct model import
 
 // Endpoint to fetch paper by QP code
 router.get("/", async (req, res) => {
