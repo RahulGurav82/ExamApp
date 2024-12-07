@@ -32,11 +32,6 @@
                                 <p class="card-text">
                                     <strong>Participants (<%= room.participants.length %>):</strong>
                                 </p>
-                                <ul class="list-group list-group-flush">
-                                    <% room.participants.forEach(participant => { %>
-                                        <li class="list-group-item">Roll No: <%= participant.rollNo %></li>
-                                    <% }); %>
-                                </ul>
                                 <a href="/createClass/room/<%= room.roomId %>" class="btn btn-primary mt-3 w-100">Enter Room</a>
                                 <form action="/createClass/deleteRoom/<%= room.roomId %>" method="POST" class="mt-2">
                                     <button type="submit" class="btn btn-danger w-100">Delete Room</button>

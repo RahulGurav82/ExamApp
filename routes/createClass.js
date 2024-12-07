@@ -81,15 +81,17 @@ router.get("/room/:roomId", async (req, res) => {
             room.participants.map(async (participant) => {
                 const degreeData = await Degree.findOne({ rollno: participant.rollNo });
                 const studentData = await Student.findOne({ rollNumber: participant.rollNo });
-
+        
                 return {
                     rollNo: participant.rollNo,
                     joinTime: participant.joinTime,
                     degreeImage: degreeData?.photoUrl || null,
                     liveImage: studentData?.image || null,
+                    department: degreeData?.department || "N/A",
+                    year: degreeData?.year || "N/A",
                 };
             })
-        );
+        );        
 
         res.render("Examiner/room", { 
             room, 
