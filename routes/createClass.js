@@ -127,7 +127,7 @@ router.get("/room/:roomId", async (req, res) => {
     router.post("/validateRoom", async (req, res) => {
         const { rollNumber, roomId } = req.body;
         console.log("Validating Room ID:", roomId);
-
+    
         try {
             // Step 1: Validate the room
             const room = await Room.findOne({ roomId });
@@ -139,7 +139,7 @@ router.get("/room/:roomId", async (req, res) => {
                 });
             }
             console.log("Room found:", room);
-
+    
             // Step 2: Validate the student
             const isValidStudent = await validateStudent(rollNumber);
             if (!isValidStudent) {
@@ -149,7 +149,7 @@ router.get("/room/:roomId", async (req, res) => {
                     message: "Invalid roll number. Student validation failed.",
                 });
             }
-
+    
             // Step 3: Add the validated participant to the room
             const participant = {
                 rollNo: rollNumber,
@@ -157,12 +157,12 @@ router.get("/room/:roomId", async (req, res) => {
             };
             room.participants.push(participant);
             await room.save();
-
+    
             console.log("Updated Room Data After Adding Participant:", room);
-
+    
             // Emit event for real-time updates
             io.emit("participantJoined", { roomId, participant });
-
+    
             return res.status(200).json({
                 success: true,
                 message: "Participant validated and added to the room successfully.",
@@ -175,13 +175,22 @@ router.get("/room/:roomId", async (req, res) => {
             });
         }
     });
+    
 
-    // Mock validation function
+    // Function to validate a student using the Degree model
     async function validateStudent(rollNumber) {
-        // Replace this logic with real validation (e.g., database query)
-        const validRollNumbers = ["247503", "247504", "247505"]; // Example roll numbers
-        return validRollNumbers.includes(rollNumber);
+    try {
+        // Query the Degree collection to find a matching roll number
+        const student = await Degree.findOne({ rollno: rollNumber });
+
+        // Return true if the student exists, false otherwise
+        return !!student;
+    } catch (error) {
+        console.error("Error validating student:", error);
+        return false;
     }
+}
+
 
     return router;
 };
