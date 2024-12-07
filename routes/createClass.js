@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const Room = require("../models/Room"); // Import the Room model
+// Import required models
+const Degree = require("../models/Degree");
+const Student = require("../models/Student");
+
+
 
 module.exports = (io) => {
     // Function to generate a random 5-character alphanumeric string
@@ -62,20 +67,41 @@ module.exports = (io) => {
     });
 
     // Add a new route to join a specific room
-    router.get("/room/:roomId", async (req, res) => {
-        try {
-            const room = await Room.findOne({ roomId: req.params.roomId });
-            if (!room) {
-                req.flash("error", "Classroom not found!");
-                return res.redirect("/createClass/showRooms");
-            }
-            res.render("Examiner/room", { room, moment: require("moment") });
-        } catch (error) {
-            console.error("Error finding room:", error);
-            req.flash("error", "Failed to fetch classroom details.");
-            res.redirect("/createClass/showRooms");
+// Add this to the room route
+router.get("/room/:roomId", async (req, res) => {
+    try {
+        const room = await Room.findOne({ roomId: req.params.roomId });
+        if (!room) {
+            req.flash("error", "Classroom not found!");
+            return res.redirect("/createClass/showRooms");
         }
-    });
+
+        // Fetch participants with their degree and live images
+        const participantsWithImages = await Promise.all(
+            room.participants.map(async (participant) => {
+                const degreeData = await Degree.findOne({ rollno: participant.rollNo });
+                const studentData = await Student.findOne({ rollNumber: participant.rollNo });
+
+                return {
+                    rollNo: participant.rollNo,
+                    joinTime: participant.joinTime,
+                    degreeImage: degreeData?.photoUrl || null,
+                    liveImage: studentData?.image || null,
+                };
+            })
+        );
+
+        res.render("Examiner/room", { 
+            room, 
+            participants: participantsWithImages,
+            moment: require("moment") 
+        });
+    } catch (error) {
+        console.error("Error finding room:", error);
+        req.flash("error", "Failed to fetch classroom details.");
+        res.redirect("/createClass/showRooms");
+    }
+});
 
     // Route to delete a room
     router.post("/deleteRoom/:roomId", async (req, res) => {
