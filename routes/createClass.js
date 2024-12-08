@@ -6,7 +6,6 @@ const Degree = require("../models/Degree");
 const Student = require("../models/Student");
 
 
-
 module.exports = (io) => {
     // Function to generate a random 5-character alphanumeric string
     function generateRoomId() {
@@ -67,43 +66,56 @@ module.exports = (io) => {
     });
 
     // Add a new route to join a specific room
-// Add this to the room route
-router.get("/room/:roomId", async (req, res) => {
-    try {
-        const room = await Room.findOne({ roomId: req.params.roomId });
-        if (!room) {
-            req.flash("error", "Classroom not found!");
-            return res.redirect("/createClass/showRooms");
-        }
-
-        // Fetch participants with their degree and live images
-        const participantsWithImages = await Promise.all(
-            room.participants.map(async (participant) => {
-                const degreeData = await Degree.findOne({ rollno: participant.rollNo });
-                const studentData = await Student.findOne({ rollNumber: participant.rollNo });
+    // Add this to the room route
         
-                return {
-                    rollNo: participant.rollNo,
-                    joinTime: participant.joinTime,
-                    degreeImage: degreeData?.photoUrl || null,
-                    liveImage: studentData?.image || null,
-                    department: degreeData?.department || "N/A",
-                    year: degreeData?.year || "N/A",
-                };
-            })
-        );        
+    router.get("/room/:roomId", async (req, res) => {
+        try {
+            const room = await Room.findOne({ roomId: req.params.roomId });
+            if (!room) {
+                req.flash("error", "Classroom not found!");
+                return res.redirect("/createClass/showRooms");
+            }
 
-        res.render("Examiner/room", { 
-            room, 
-            participants: participantsWithImages,
-            moment: require("moment") 
-        });
-    } catch (error) {
-        console.error("Error finding room:", error);
-        req.flash("error", "Failed to fetch classroom details.");
-        res.redirect("/createClass/showRooms");
-    }
-});
+            // Fetch participants with their degree and live images
+            const participantsWithImages = await Promise.all(
+                room.participants.map(async (participant) => {
+                    const degreeData = await Degree.findOne({ rollno: participant.rollNo });
+                    const studentData = await Student.findOne({ rollNumber: participant.rollNo });
+            
+                    return {
+                        rollNo: participant.rollNo,
+                        joinTime: participant.joinTime,
+                        degreeImage: degreeData?.photoUrl || null,
+                        liveImage: studentData?.image || null,
+                        department: degreeData?.department || "N/A",
+                        year: degreeData?.year || "N/A",
+                    };
+                })
+            );        
+
+            res.render("Examiner/room", { 
+                room, 
+                participants: participantsWithImages,
+                moment: require("moment") 
+            });
+        } catch (error) {
+            console.error("Error finding room:", error);
+            req.flash("error", "Failed to fetch classroom details.");
+            res.redirect("/createClass/showRooms");
+        }
+    });
+
+    // GET request to retrieve logs for a specific room
+    // In createClass.js
+
+    // Route to get logs for a specific room
+    router.get("/logs/:roomId", (req, res) => {
+        const { roomId } = req.params;
+        // Fetch logs for the room (you can use the roomLogs object here)
+        const logs = roomLogs[roomId] || [];
+        res.render("Examiner/logs", { roomId, logs });
+    });
+
 
     // Route to delete a room
     router.post("/deleteRoom/:roomId", async (req, res) => {
@@ -181,17 +193,17 @@ router.get("/room/:roomId", async (req, res) => {
 
     // Function to validate a student using the Degree model
     async function validateStudent(rollNumber) {
-    try {
-        // Query the Degree collection to find a matching roll number
-        const student = await Degree.findOne({ rollno: rollNumber });
+        try {
+            // Query the Degree collection to find a matching roll number
+            const student = await Degree.findOne({ rollno: rollNumber });
 
-        // Return true if the student exists, false otherwise
-        return !!student;
-    } catch (error) {
-        console.error("Error validating student:", error);
-        return false;
+            // Return true if the student exists, false otherwise
+            return !!student;
+        } catch (error) {
+            console.error("Error validating student:", error);
+            return false;
+        }
     }
-}
 
 
     return router;

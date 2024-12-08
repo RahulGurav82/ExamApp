@@ -33,7 +33,7 @@
                                     <strong>Participants (<%= room.participants.length %>):</strong>
                                 </p>
                                 <a href="/createClass/room/<%= room.roomId %>" class="btn btn-primary mt-3 w-100">Verify Students</a>
-                                <a href="/logs/<%= room.roomId %>" class="btn btn-info mt-2 w-100">See Logs</a>
+                                <a href="/createClass/logs/<%= room.roomId %>" class="btn btn-info mt-2 w-100">See Logs</a>
                                 <form action="/createClass/deleteRoom/<%= room.roomId %>" method="POST" class="mt-2">
                                     <button type="submit" class="btn btn-danger w-100">Delete Room</button>
                                 </form>

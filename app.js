@@ -90,23 +90,58 @@ app.use("/addStud", addStudRoutes);
 app.use("/createClass", createClassRouter);
 
 // Socket.IO
-io.on("connection", (socket) => {
-    console.log("A user connected");
+// In app.js
+let roomLogs = {}; // Store logs by room ID
 
-    socket.on("joinRoom", (roomId) => {
-        socket.join(roomId);
+io.on('connection', (socket) => {
+    console.log('A user connected');
+    
+    socket.on('joinRoom', (roomId) => {
+        socket.join(roomId);  // Join the room
         console.log(`User joined room: ${roomId}`);
+        
+        // Log the event
+        const logData = {
+            roomId,
+            message: 'User joined the room',
+            timestamp: new Date(),
+        };
+        roomLogs[roomId] = roomLogs[roomId] || [];
+        roomLogs[roomId].push(logData);
+        
+        // Emit the log to all clients in the room
+        io.to(roomId).emit('newLog', logData);
     });
 
-    socket.on("message", ({ roomId, message }) => {
-        io.to(roomId).emit("message", message);
-        console.log(`Message sent to room ${roomId}: ${message}`);
+    socket.on('leaveRoom', (roomId) => {
+        socket.leave(roomId);  // Leave the room
+        console.log(`User left room: ${roomId}`);
+        
+        // Log the event
+        const logData = {
+            roomId,
+            message: 'User left the room',
+            timestamp: new Date(),
+        };
+        roomLogs[roomId] = roomLogs[roomId] || [];
+        roomLogs[roomId].push(logData);
+
+        // Emit the log to all clients in the room
+        io.to(roomId).emit('newLog', logData);
     });
 
-    socket.on("disconnect", () => {
-        console.log("A user disconnected");
+    socket.on('log', (logData) => {
+        const roomId = logData.roomId;
+        if (!roomLogs[roomId]) {
+            roomLogs[roomId] = [];
+        }
+        roomLogs[roomId].push(logData);
+        
+        // Emit the log to all clients in the room
+        io.to(roomId).emit('newLog', logData);
     });
 });
+
 
 // Root Route
 app.get("/", (req, res) => {
