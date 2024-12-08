@@ -91,27 +91,34 @@ app.use("/createClass", createClassRouter);
 
 // Socket.IO
 // In app.js
-let roomLogs = {}; // Store logs by room ID
+let roomLogs = {}; // Global storage for room logs
+
 
 io.on('connection', (socket) => {
     console.log('A user connected');
     
     socket.on('joinRoom', (roomId) => {
-        socket.join(roomId);  // Join the room
-        console.log(`User joined room: ${roomId}`);
-        
-        // Log the event
-        const logData = {
-            roomId,
-            message: 'User joined the room',
-            timestamp: new Date(),
-        };
-        roomLogs[roomId] = roomLogs[roomId] || [];
-        roomLogs[roomId].push(logData);
-        
-        // Emit the log to all clients in the room
-        io.to(roomId).emit('newLog', logData);
+        try {
+            socket.join(roomId);
+            console.log(`User joined room: ${roomId}`);
+    
+            // Log the event
+            const logData = {
+                roomId,
+                message: 'User joined the room',
+                timestamp: new Date(),
+            };
+    
+            roomLogs[roomId] = roomLogs[roomId] || [];
+            roomLogs[roomId].push(logData);
+    
+            // Emit the log to all clients in the room
+            io.to(roomId).emit('newLog', logData);
+        } catch (error) {
+            console.error(`Error handling joinRoom: ${error.message}`);
+        }
     });
+    
 
     socket.on('leaveRoom', (roomId) => {
         socket.leave(roomId);  // Leave the room
