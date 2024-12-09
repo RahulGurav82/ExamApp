@@ -114,22 +114,26 @@ const roomLogs = {};
 // Route to receive logs for a specific room
 router.post("/logs/:roomId", (req, res) => {
     const { roomId } = req.params;
-    const { logEntry } = req.body;
+    console.log("Request received for room:", roomId);
+    console.log("Request body:", req.body);
+
+    const { logEntry, status } = req.body;
 
     if (!roomLogs[roomId]) {
         roomLogs[roomId] = [];
     }
 
-    // Save the log entry with a timestamp
     roomLogs[roomId].push({
-        message: logEntry,
+        message: logEntry || "No log message provided",
+        status: status || "unknown",
         timestamp: new Date(),
     });
 
-    console.log(`Log received for room ${roomId}:`, logEntry);
+    console.log("Logs for room", roomId, ":", roomLogs[roomId]);
 
     res.status(200).json({ success: true, message: "Log entry added successfully." });
 });
+
 
 // Route to get logs for a specific room
 router.get("/logs/:roomId", (req, res) => {
