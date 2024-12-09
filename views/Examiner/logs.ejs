@@ -4,118 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Logs - <%= roomId %></title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
         }
-
         th, td {
             border: 1px solid #ddd;
-            padding: 12px;
+            padding: 8px;
             text-align: left;
         }
-
         th {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-
-        tr:hover {
-            background-color: #ddd;
-        }
-
         tbody {
             display: block;
             height: 400px;
             overflow-y: auto;
             border-top: 1px solid #ddd;
         }
-
         tr {
             display: table;
             width: 100%;
             table-layout: fixed;
         }
-
-        /* Warning color for inactive status */
-        .warning-row {
-            background-color: #ffeb3b;
-        }
     </style>
 </head>
 <body>
-    <h1>Logs for Room: <%= roomId %></h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Roll Number</th>
-                <th>Message</th>
-                <th>Status</th>
-                <th>Timestamp</th>
-            </tr>
-        </thead>
-        <tbody id="logs-table-body">
-            <% logs.forEach(log => { %>
-                <tr class="<%= log.status === 'inactive' ? 'warning-row' : '' %>">
-                    <td><%= log.rollNumber %></td>
-                    <td><%= log.message %></td>
-                    <td><%= log.status %></td>
-                    <td><%= new Date(log.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) %></td>
-                </tr>
-            <% }); %>
-        </tbody>
-    </table>
+    <div class="container my-4">
+        <h1 class="text-center mb-4">Logs for Room: <%= roomId %></h1>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Roll Number</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-table-body">
+                    <% logs.forEach(log => { %>
+                        <tr>
+                            <td><%= log.rollNumber %></td>
+                            <td><%= log.message %></td>
+                            <td><%= log.status %></td>
+                            <td><%= log.timestamp.toISOString() %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-    const roomId = "<%= roomId %>";
-    const tableBody = document.getElementById('logs-table-body');
+        const roomId = "<%= roomId %>";
+        const tableBody = document.getElementById('logs-table-body');
 
-    // Establish an EventSource connection
-    const eventSource = new EventSource(`https://examapp-1-7pb2.onrender.com/createClass/logs/${roomId}/stream`);
+        // Establish an EventSource connection
+        const eventSource = new EventSource(`https://examapp-1-7pb2.onrender.com/createClass/logs/${roomId}/stream`);
 
-    eventSource.onmessage = (event) => {
-        const log = JSON.parse(event.data);
+        eventSource.onmessage = (event) => {
+            const log = JSON.parse(event.data);
 
-        // Create a new row for the log
-        const row = document.createElement('tr');
-        row.classList.add(log.status === 'inactive' ? 'warning-row' : ''); // Apply warning row for inactive status
-        row.innerHTML = `
-            <td>${log.rollNumber}</td>
-            <td>${log.message}</td>
-            <td>${log.status}</td>
-            <td>${new Date(log.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
-        `;
+            // Create a new row for the log
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${log.rollNumber}</td>
+                <td>${log.message}</td>
+                <td>${log.status}</td>
+                <td>${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+            `;
 
-        // Add the new log at the top of the table
-        tableBody.prepend(row);
+            // Add the new log at the top of the table
+            tableBody.prepend(row);
 
-        // Ensure older logs scroll upwards automatically
-        tableBody.scrollTop = 0;
-    };
+            // Ensure older logs scroll upwards automatically
+            tableBody.scrollTop = 0;
+        };
 
-    eventSource.onerror = () => {
-        console.error("Error connecting to the server for live logs.");
-        alert("Lost connection to the server. Logs might not update in real-time.");
-    };
+        eventSource.onerror = () => {
+            console.error("Error connecting to the server for live logs.");
+            alert("Lost connection to the server. Logs might not update in real-time.");
+        };
     </script>
 </body>
 </html>
