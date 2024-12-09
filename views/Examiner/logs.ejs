@@ -53,12 +53,13 @@
         </tbody>
     </table>
 
+
         <script>
     const roomId = "<%= roomId %>";
     const tableBody = document.getElementById('logs-table-body');
 
     // Establish an EventSource connection
-    const eventSource = new EventSource(`/logs/${roomId}/stream`);
+    const eventSource = new EventSource(`https://examapp-1-7pb2.onrender.com/createClass/logs/${roomId}/stream`);
 
     eventSource.onmessage = (event) => {
         const log = JSON.parse(event.data);
@@ -69,8 +70,13 @@
             <td>${log.rollNumber}</td>
             <td>${log.message}</td>
             <td>${log.status}</td>
-            <td>${new Date(log.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+            <td>${new Intl.DateTimeFormat('en-IN', { 
+                dateStyle: 'medium', 
+                timeStyle: 'medium', 
+                timeZone: 'Asia/Kolkata' 
+            }).format(new Date(log.timestamp))}</td>
         `;
+
 
         // Add the new log at the top of the table
         tableBody.prepend(row);
