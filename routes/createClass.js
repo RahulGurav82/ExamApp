@@ -124,7 +124,7 @@ router.post("/logs/:roomId", (req, res) => {
 
     roomLogs[roomId].push({
         rollNumber: rollNumber || "Unknown Roll Number",
-        message: logMessage || "No log message provided",
+        message: logMessage || "No logs message provided",
         status: status || "unknown",
         timestamp: new Date(),
     });
