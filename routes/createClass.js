@@ -108,13 +108,38 @@ module.exports = (io) => {
     // GET request to retrieve logs for a specific room
     // In createClass.js
 
-    // Route to get logs for a specific room
-    router.get("/logs/:roomId", (req, res) => {
-        const { roomId } = req.params;
-        // Fetch logs for the room (you can use the roomLogs object here)
-        const logs = roomLogs[roomId] || [];
-        res.render("Examiner/logs", { roomId, logs });
+// Global log storage (in-memory object)
+const roomLogs = {};
+
+// Route to receive logs for a specific room
+router.post("/logs/:roomId", (req, res) => {
+    const { roomId } = req.params;
+    const { logEntry } = req.body;
+
+    if (!roomLogs[roomId]) {
+        roomLogs[roomId] = [];
+    }
+
+    // Save the log entry with a timestamp
+    roomLogs[roomId].push({
+        message: logEntry,
+        timestamp: new Date(),
     });
+
+    console.log(`Log received for room ${roomId}:`, logEntry);
+
+    res.status(200).json({ success: true, message: "Log entry added successfully." });
+});
+
+// Route to get logs for a specific room
+router.get("/logs/:roomId", (req, res) => {
+    const { roomId } = req.params;
+
+    // Fetch logs for the room (from in-memory object)
+    const logs = roomLogs[roomId] || [];
+    res.render("Examiner/logs", { roomId, logs });
+});
+
 
 
     // Route to delete a room
