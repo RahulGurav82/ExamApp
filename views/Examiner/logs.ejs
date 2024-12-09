@@ -5,28 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Logs - <%= roomId %></title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
         }
+
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
             text-align: left;
         }
+
         th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+
         tbody {
             display: block;
             height: 400px;
             overflow-y: auto;
             border-top: 1px solid #ddd;
         }
+
         tr {
             display: table;
             width: 100%;
             table-layout: fixed;
+        }
+
+        /* Warning color for inactive status */
+        .warning-row {
+            background-color: #ffeb3b;
         }
     </style>
 </head>
@@ -43,18 +75,17 @@
         </thead>
         <tbody id="logs-table-body">
             <% logs.forEach(log => { %>
-                <tr>
+                <tr class="<%= log.status === 'inactive' ? 'warning-row' : '' %>">
                     <td><%= log.rollNumber %></td>
                     <td><%= log.message %></td>
                     <td><%= log.status %></td>
-                    <td><%= log.timestamp.toISOString() %></td>
+                    <td><%= new Date(log.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) %></td>
                 </tr>
             <% }); %>
         </tbody>
     </table>
 
-
-        <script>
+    <script>
     const roomId = "<%= roomId %>";
     const tableBody = document.getElementById('logs-table-body');
 
@@ -66,14 +97,13 @@
 
         // Create a new row for the log
         const row = document.createElement('tr');
+        row.classList.add(log.status === 'inactive' ? 'warning-row' : ''); // Apply warning row for inactive status
         row.innerHTML = `
             <td>${log.rollNumber}</td>
             <td>${log.message}</td>
             <td>${log.status}</td>
-            <td><%= new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) %></td>
-
+            <td>${new Date(log.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
         `;
-
 
         // Add the new log at the top of the table
         tableBody.prepend(row);
@@ -86,6 +116,6 @@
         console.error("Error connecting to the server for live logs.");
         alert("Lost connection to the server. Logs might not update in real-time.");
     };
-</script>
+    </script>
 </body>
 </html>
