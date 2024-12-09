@@ -53,33 +53,36 @@
         </tbody>
     </table>
 
-    <script>
-        const roomId = "<%= roomId %>";
-        const tableBody = document.getElementById('logs-table-body');
+        <script>
+    const roomId = "<%= roomId %>";
+    const tableBody = document.getElementById('logs-table-body');
 
-        // Establish an EventSource connection
-        const eventSource = new EventSource(`/logs/${roomId}/stream`);
+    // Establish an EventSource connection
+    const eventSource = new EventSource(`/logs/${roomId}/stream`);
 
-        eventSource.onmessage = (event) => {
-            const log = JSON.parse(event.data);
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${log.rollNumber}</td>
-                <td>${log.message}</td>
-                <td>${log.status}</td>
-                <td>${new Date(log.timestamp).toLocaleString()}</td>
-            `;
+    eventSource.onmessage = (event) => {
+        const log = JSON.parse(event.data);
 
-            // Add new log to the top
-            tableBody.prepend(row);
+        // Create a new row for the log
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${log.rollNumber}</td>
+            <td>${log.message}</td>
+            <td>${log.status}</td>
+            <td>${new Date(log.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+        `;
 
-            // Ensure older logs scroll upwards automatically
-            tableBody.scrollTop = 0;
-        };
+        // Add the new log at the top of the table
+        tableBody.prepend(row);
 
-        eventSource.onerror = () => {
-            console.error("Error connecting to event source");
-        };
-    </script>
+        // Ensure older logs scroll upwards automatically
+        tableBody.scrollTop = 0;
+    };
+
+    eventSource.onerror = () => {
+        console.error("Error connecting to the server for live logs.");
+        alert("Lost connection to the server. Logs might not update in real-time.");
+    };
+</script>
 </body>
 </html>
