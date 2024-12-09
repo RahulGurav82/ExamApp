@@ -17,6 +17,17 @@
         th {
             background-color: #f2f2f2;
         }
+        tbody {
+            display: block;
+            height: 400px;
+            overflow-y: auto;
+            border-top: 1px solid #ddd;
+        }
+        tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
     </style>
 </head>
 <body>
@@ -44,29 +55,31 @@
 
     <script>
         const roomId = "<%= roomId %>";
+        const tableBody = document.getElementById('logs-table-body');
 
-        function fetchLogs() {
-            fetch(`/logs/${roomId}/data`)
-                .then(response => response.json())
-                .then(logs => {
-                    const tableBody = document.getElementById('logs-table-body');
-                    tableBody.innerHTML = ''; // Clear existing rows
-                    logs.forEach(log => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${log.rollNumber}</td>
-                            <td>${log.message}</td>
-                            <td>${log.status}</td>
-                            <td>${new Date(log.timestamp).toLocaleString()}</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => console.error('Error fetching logs:', error));
-        }
+        // Establish an EventSource connection
+        const eventSource = new EventSource(`/logs/${roomId}/stream`);
 
-        // Fetch logs every 5 seconds
-        setInterval(fetchLogs, 5000);
+        eventSource.onmessage = (event) => {
+            const log = JSON.parse(event.data);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${log.rollNumber}</td>
+                <td>${log.message}</td>
+                <td>${log.status}</td>
+                <td>${new Date(log.timestamp).toLocaleString()}</td>
+            `;
+
+            // Add new log to the top
+            tableBody.prepend(row);
+
+            // Ensure older logs scroll upwards automatically
+            tableBody.scrollTop = 0;
+        };
+
+        eventSource.onerror = () => {
+            console.error("Error connecting to event source");
+        };
     </script>
 </body>
 </html>

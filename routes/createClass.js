@@ -105,47 +105,76 @@ module.exports = (io) => {
         }
     });
 
-    // GET request to retrieve logs for a specific room
-    // In createClass.js
+// Room logs and streams storage
+const roomLogs = {};
+const roomStreams = {};
 
-    const roomLogs = {};
+// POST request to add a log entry for a specific room
+router.post("/logs/:roomId", (req, res) => {
+    const { roomId } = req.params;
+    console.log("Request received for room:", roomId);
+    console.log("Request body:", req.body);
 
-    router.post("/logs/:roomId", (req, res) => {
-        const { roomId } = req.params;
-        console.log("Request received for room:", roomId);
-        console.log("Request body:", req.body);
-    
-        const { logMessage, status, rollNumber } = req.body;
-    
-        if (!roomLogs[roomId]) {
-            roomLogs[roomId] = [];
-        }
-    
-        roomLogs[roomId].push({
-            rollNumber: rollNumber || "Unknown Roll Number",
-            message: logMessage || "No logs message provided",
-            status: status || "unknown",
-            timestamp: new Date(),
+    const { logMessage, status, rollNumber } = req.body;
+
+    if (!roomLogs[roomId]) {
+        roomLogs[roomId] = [];
+    }
+
+    const newLog = {
+        rollNumber: rollNumber || "Unknown Roll Number",
+        message: logMessage || "No logs message provided",
+        status: status || "unknown",
+        timestamp: new Date(),
+    };
+
+    roomLogs[roomId].push(newLog);
+    console.log("Logs for room", roomId, ":", roomLogs[roomId]);
+
+    // Broadcast the new log to connected clients
+    if (roomStreams[roomId]) {
+        roomStreams[roomId].forEach((stream) => {
+            stream.write(`data: ${JSON.stringify(newLog)}\n\n`);
         });
-    
-        console.log("Logs for room", roomId, ":", roomLogs[roomId]);
-    
-        res.status(200).json({ success: true, message: "Log entry added successfully." });
+    }
+
+    res.status(200).json({ success: true, message: "Log entry added successfully." });
+});
+
+// Route to render logs page for a specific room
+router.get("/logs/:roomId", (req, res) => {
+    const { roomId } = req.params;
+    const logs = roomLogs[roomId] || [];
+    res.render("Examiner/logs", { roomId, logs });
+});
+
+// Route to fetch logs as JSON
+router.get("/logs/:roomId/data", (req, res) => {
+    const { roomId } = req.params;
+    const logs = roomLogs[roomId] || [];
+    res.json(logs);
+});
+
+// SSE Route for real-time log updates
+router.get("/logs/:roomId/stream", (req, res) => {
+    const { roomId } = req.params;
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    // Add client to the room's stream list
+    if (!roomStreams[roomId]) {
+        roomStreams[roomId] = [];
+    }
+    roomStreams[roomId].push(res);
+
+    // Remove client on disconnect
+    req.on("close", () => {
+        roomStreams[roomId] = roomStreams[roomId].filter((stream) => stream !== res);
     });
-    
-    // Route to render logs page for a specific room
-    router.get("/logs/:roomId", (req, res) => {
-        const { roomId } = req.params;
-        const logs = roomLogs[roomId] || [];
-        res.render("Examiner/logs", { roomId, logs });
-    });
-    
-    // Route to fetch logs as JSON
-    router.get("/logs/:roomId/data", (req, res) => {
-        const { roomId } = req.params;
-        const logs = roomLogs[roomId] || [];
-        res.json(logs);
-    });
+});
+
     
 
 
