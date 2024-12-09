@@ -111,20 +111,20 @@ module.exports = (io) => {
 // Global log storage (in-memory object)
 const roomLogs = {};
 
-// Route to receive logs for a specific room
 router.post("/logs/:roomId", (req, res) => {
     const { roomId } = req.params;
     console.log("Request received for room:", roomId);
     console.log("Request body:", req.body);
 
-    const { logEntry, status } = req.body;
+    const { logMessage, status, rollNumber } = req.body; // Match these keys with the Android payload
 
     if (!roomLogs[roomId]) {
         roomLogs[roomId] = [];
     }
 
     roomLogs[roomId].push({
-        message: logEntry || "No log message provided",
+        rollNumber: rollNumber || "Unknown Roll Number",
+        message: logMessage || "No log message provided",
         status: status || "unknown",
         timestamp: new Date(),
     });
@@ -133,6 +133,7 @@ router.post("/logs/:roomId", (req, res) => {
 
     res.status(200).json({ success: true, message: "Log entry added successfully." });
 });
+
 
 
 // Route to get logs for a specific room
