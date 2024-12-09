@@ -40,6 +40,8 @@
 <body>
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Back Button -->
+            <a href="javascript:history.back()" class="btn btn-primary">&lt; Back</a>
             <h1 class="display-5"><%= room.roomName %></h1>
             <p class="text-muted">Room ID: <%= room.roomId %></p>
         </div>
@@ -109,7 +111,7 @@
         console.log("Table body found:", tableBody);
         const newRow = document.createElement("tr");
 
-        newRow.innerHTML = `
+        newRow.innerHTML = ` 
             <td>${tableBody.rows.length + 1}</td>
             <td>${data.participant.rollNo}</td>
             <td>${new Date(data.participant.joinTime).toLocaleString()}</td>
