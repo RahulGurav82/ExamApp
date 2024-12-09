@@ -9,13 +9,14 @@ const Student = require("../models/Student");
 module.exports = (io) => {
     // Function to generate a random 5-character alphanumeric string
     function generateRoomId() {
-        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";  // Only uppercase characters
         let roomId = "";
         for (let i = 0; i < 5; i++) {
             roomId += characters.charAt(Math.floor(Math.random() * characters.length));
         }
         return roomId;
     }
+    
 
     // Render the create class form
     router.get("/", (req, res) => {
