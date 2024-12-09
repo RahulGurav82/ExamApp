@@ -125,7 +125,7 @@ router.post("/logs/:roomId", (req, res) => {
         rollNumber: rollNumber || "Unknown Roll Number",
         message: logMessage || "No logs message provided",
         status: status || "unknown",
-        timestamp: new Date().toISOString(), // Store as ISO string
+        timestamp: new Date(), // Store as ISO string
     };
     
 

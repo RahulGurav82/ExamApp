@@ -70,11 +70,8 @@
             <td>${log.rollNumber}</td>
             <td>${log.message}</td>
             <td>${log.status}</td>
-            <td>${new Intl.DateTimeFormat('en-IN', { 
-                dateStyle: 'medium', 
-                timeStyle: 'medium', 
-                timeZone: 'Asia/Kolkata' 
-            }).format(new Date(log.timestamp))}</td>
+            <td><%= new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) %></td>
+
         `;
 
 
