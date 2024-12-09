@@ -4,13 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Logs - <%= roomId %></title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
     <h1>Logs for Room: <%= roomId %></h1>
-    <ul>
-        <% logs.forEach(log => { %>
-            <li><%= log.timestamp %> - <%= log.message %></li>
-        <% }); %>
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Roll Number</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody id="logs-table-body">
+            <% logs.forEach(log => { %>
+                <tr>
+                    <td><%= log.rollNumber %></td>
+                    <td><%= log.message %></td>
+                    <td><%= log.status %></td>
+                    <td><%= log.timestamp.toISOString() %></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <script>
+        const roomId = "<%= roomId %>";
+
+        function fetchLogs() {
+            fetch(`/logs/${roomId}/data`)
+                .then(response => response.json())
+                .then(logs => {
+                    const tableBody = document.getElementById('logs-table-body');
+                    tableBody.innerHTML = ''; // Clear existing rows
+                    logs.forEach(log => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${log.rollNumber}</td>
+                            <td>${log.message}</td>
+                            <td>${log.status}</td>
+                            <td>${new Date(log.timestamp).toLocaleString()}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching logs:', error));
+        }
+
+        // Fetch logs every 5 seconds
+        setInterval(fetchLogs, 5000);
+    </script>
 </body>
 </html>

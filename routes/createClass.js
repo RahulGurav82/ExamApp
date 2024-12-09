@@ -108,42 +108,45 @@ module.exports = (io) => {
     // GET request to retrieve logs for a specific room
     // In createClass.js
 
-// Global log storage (in-memory object)
-const roomLogs = {};
+    const roomLogs = {};
 
-router.post("/logs/:roomId", (req, res) => {
-    const { roomId } = req.params;
-    console.log("Request received for room:", roomId);
-    console.log("Request body:", req.body);
-
-    const { logMessage, status, rollNumber } = req.body; // Match these keys with the Android payload
-
-    if (!roomLogs[roomId]) {
-        roomLogs[roomId] = [];
-    }
-
-    roomLogs[roomId].push({
-        rollNumber: rollNumber || "Unknown Roll Number",
-        message: logMessage || "No logs message provided",
-        status: status || "unknown",
-        timestamp: new Date(),
+    router.post("/logs/:roomId", (req, res) => {
+        const { roomId } = req.params;
+        console.log("Request received for room:", roomId);
+        console.log("Request body:", req.body);
+    
+        const { logMessage, status, rollNumber } = req.body;
+    
+        if (!roomLogs[roomId]) {
+            roomLogs[roomId] = [];
+        }
+    
+        roomLogs[roomId].push({
+            rollNumber: rollNumber || "Unknown Roll Number",
+            message: logMessage || "No logs message provided",
+            status: status || "unknown",
+            timestamp: new Date(),
+        });
+    
+        console.log("Logs for room", roomId, ":", roomLogs[roomId]);
+    
+        res.status(200).json({ success: true, message: "Log entry added successfully." });
     });
-
-    console.log("Logs for room", roomId, ":", roomLogs[roomId]);
-
-    res.status(200).json({ success: true, message: "Log entry added successfully." });
-});
-
-
-
-// Route to get logs for a specific room
-router.get("/logs/:roomId", (req, res) => {
-    const { roomId } = req.params;
-
-    // Fetch logs for the room (from in-memory object)
-    const logs = roomLogs[roomId] || [];
-    res.render("Examiner/logs", { roomId, logs });
-});
+    
+    // Route to render logs page for a specific room
+    router.get("/logs/:roomId", (req, res) => {
+        const { roomId } = req.params;
+        const logs = roomLogs[roomId] || [];
+        res.render("Examiner/logs", { roomId, logs });
+    });
+    
+    // Route to fetch logs as JSON
+    router.get("/logs/:roomId/data", (req, res) => {
+        const { roomId } = req.params;
+        const logs = roomLogs[roomId] || [];
+        res.json(logs);
+    });
+    
 
 
 
