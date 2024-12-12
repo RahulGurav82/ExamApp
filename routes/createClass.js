@@ -200,6 +200,35 @@ router.get("/logs/:roomId/stream", (req, res) => {
 
         res.redirect("/createClass/showRooms");
     });
+    router.post('/CheckRoom', async (req, res) => {
+        try {
+            const { roomId } = req.body;
+    
+            if (!roomId) {
+                return res.status(400).json({ success: false, message: 'roomId is required' });
+            }
+    
+            // Check if the roomId exists in the database
+            const roomExists = await Room.findOne({ roomId });
+    
+            if (!roomExists) {
+                return res.status(200).json({
+                    success: false,
+                    message: 'Room not found. Unpin and exit the app.',
+                    action: 'unpin_exit'
+                });
+            }
+    
+            // If roomId exists, return success
+            res.status(200).json({
+                success: true,
+                message: 'Room is active.'
+            });
+        } catch (error) {
+            console.error('Error checking roomId:', error);
+            res.status(500).json({ success: false, message: 'Internal server error' });
+        }
+    });
 
     // Endpoint to validate room ID and add a participant
     router.post("/validateRoom", async (req, res) => {
